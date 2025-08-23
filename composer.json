@@ -1,15 +1,24 @@
 {
-    "name": "laravel/laravel",
+    "name": "bassena-dev/api-fake-store-integration",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Microserviço Laravel 10+ que integra com a Fake Store API usando padrões Strategy, AbstractService e BusinessException",
+    "keywords": ["laravel", "api", "fake-store", "integration", "microservice", "strategy-pattern"],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "William Sena (Bassena Dev)",
+            "email": "williamsena13@gmail.com",
+            "homepage": "https://williamsena13.github.io/",
+            "role": "Developer"
+        }
+    ],
     "require": {
         "php": "^8.1",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
-        "laravel/tinker": "^2.8"
+        "laravel/tinker": "^2.8",
+        "spatie/laravel-activitylog": "^4.10"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

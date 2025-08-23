@@ -1,66 +1,380 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# API FakeStore Integration
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Microserviço Laravel 10+ que integra com a Fake Store API.
 
-## About Laravel
+## Características
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Laravel 10+** com PHP 8.2+
+- **Padrão Strategy** para sincronização (Full/Delta)
+- **AbstractService** e **AbstractRepository** para camadas organizadas
+- **BusinessException** para tratamento padronizado de erros
+- **Spatie Activity Log** configurado em BaseModel
+- **Middleware de integração** com logs estruturados e rate limiting
+- **SoftDeletes** em todas as tabelas principais
+- **SQL puro** para estatísticas agregadas
+- **Resiliência** com retry/backoff e tratamento de timeouts
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Instalação
 
-## Learning Laravel
+```bash
+# Clone o projeto
+git clone https://github.com/williamsena13/api-fake-store-integration.git
+cd api-fake-store-integration
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# Instale dependências
+composer install
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+# Configure ambiente
+cp .env.example .env
+php artisan key:generate
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2. Configuração do Banco
 
-## Laravel Sponsors
+#### MySQL (padrão)
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=api_fake_store
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+#### PostgreSQL
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=api_fake_store
+DB_USERNAME=postgres
+DB_PASSWORD=password
+```
 
-### Premium Partners
+### 3. Migrações
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```bash
+# Execute as migrações
+php artisan migrate
+```
 
-## Contributing
+### 4. Configuração de Logs
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+O projeto usa logs estruturados em JSON. Configure no `.env`:
 
-## Code of Conduct
+```env
+LOG_CHANNEL=single
+LOG_LEVEL=info
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Execução
 
-## Security Vulnerabilities
+### Servidor de Desenvolvimento
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan serve
+# Acesse: http://localhost:8000
+```
 
-## License
+### Sincronização
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### Via API
+```bash
+# Sincronização completa
+curl -X POST "http://localhost:8000/api/integracoes/fakestore/sync?mode=full" \
+  -H "X-Client-Id: demo" \
+  -H "Content-Type: application/json"
+
+# Sincronização delta
+curl -X POST "http://localhost:8000/api/integracoes/fakestore/sync?mode=delta" \
+  -H "X-Client-Id: demo" \
+  -H "Content-Type: application/json"
+```
+
+#### Via Artisan
+```bash
+# Sincronização completa
+php artisan fakestore:sync --mode=full
+
+# Sincronização delta
+php artisan fakestore:sync --mode=delta
+```
+
+## Endpoints da API
+
+Todos os endpoints requerem o header `X-Client-Id`.
+
+### Sincronização
+```bash
+POST /api/integracoes/fakestore/sync?mode=full|delta
+```
+
+### Catálogo de Produtos
+```bash
+# Listagem com filtros
+GET /api/catalogo/products?category=electronics&min_price=10&max_price=100&q=shirt&sort=price&order=desc&page=1&per_page=20
+
+# Detalhes do produto
+GET /api/catalogo/products/{id}
+```
+
+### Estatísticas
+```bash
+GET /api/catalogo/stats
+```
+
+## Exemplos de Uso
+
+### 1. Listagem de Produtos com Filtros
+
+```bash
+curl -X GET "http://localhost:8000/api/catalogo/products?q=shirt&min_price=10&max_price=100&sort=price&order=desc&page=1&per_page=20" \
+  -H "X-Client-Id: demo"
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 1,
+        "external_id": 1,
+        "title": "Fjallraven - Foldsack No. 1 Backpack",
+        "description": "Your perfect pack...",
+        "price": "109.95",
+        "image_url": "https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
+        "category": {
+          "id": 1,
+          "name": "men's clothing"
+        }
+      }
+    ],
+    "per_page": 20,
+    "total": 20
+  }
+}
+```
+
+### 2. Detalhes do Produto
+
+```bash
+curl -X GET "http://localhost:8000/api/catalogo/products/1" \
+  -H "X-Client-Id: demo"
+```
+
+### 3. Estatísticas
+
+```bash
+curl -X GET "http://localhost:8000/api/catalogo/stats" \
+  -H "X-Client-Id: demo"
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "total_products": 20,
+    "avg_price": 75.99,
+    "by_category": [
+      {"category": "electronics", "total": 6},
+      {"category": "jewelery", "total": 4}
+    ],
+    "top5_expensive": [...]
+  }
+}
+```
+
+## Arquitetura e Padrões
+
+### Strategy Pattern
+
+O padrão Strategy é implementado para sincronização:
+
+- **FullSyncStrategy**: Sincroniza todos os produtos
+- **DeltaSyncStrategy**: Sincroniza apenas produtos alterados (simulado)
+- **SyncContext**: Escolhe a estratégia baseada no parâmetro `mode`
+
+### AbstractService
+
+Centraliza funcionalidades comuns:
+- Transações com `withTransaction()`
+- Validações com `findOrFailBusiness()`
+- Sanitização de filtros
+- Paginação configurável
+
+### BusinessException
+
+Padroniza retorno de erros:
+
+```json
+{
+  "error": {
+    "code": "integration.missing_client_id",
+    "message": "Missing X-Client-Id",
+    "status": 400,
+    "context": {},
+    "request_id": "uuid-here"
+  }
+}
+```
+
+### Middleware de Integração
+
+- Valida `X-Client-Id` obrigatório
+- Gera/propaga `X-Request-Id`
+- Logs estruturados com tempo de resposta
+- Rate limiting por cliente (opcional)
+
+### Logs Estruturados
+
+Exemplo de log de requisição:
+```json
+{
+  "message": "Integration Request",
+  "context": {
+    "request_id": "uuid",
+    "client_id": "demo",
+    "method": "GET",
+    "url": "http://localhost:8000/api/catalogo/products",
+    "duration_ms": 45.67,
+    "status_code": 200,
+    "ip": "127.0.0.1"
+  }
+}
+```
+
+## Índices e Performance
+
+### Índices Criados
+
+- `categories.name` - Busca por nome da categoria
+- `products.external_id` (unique) - Sincronização por ID externo
+- `products.category_id` - Join com categorias
+- `products.price` - Filtros por preço
+
+### Prevenção N+1
+
+- `ProductRepository::filter()` usa `with('category')`
+- `ProductService::getProductById()` usa `getWithCategory()`
+
+## Resiliência e Tratamento de Erros
+
+### HTTP Client
+
+- **Timeout**: 30 segundos configurável
+- **Retry**: 3 tentativas com backoff de 1s
+- **Mapeamento de erros**:
+  - Timeout → 504 `integration.timeout`
+  - 5xx → 502 `integration.upstream_error`
+  - 4xx → 424 `integration.upstream_request`
+
+### Sincronização
+
+- Erros por item não interrompem o processo
+- Logs detalhados de cada erro
+- Resultado consolidado com contadores
+
+## Testes
+
+```bash
+# Executar todos os testes
+php artisan test
+
+# Testes específicos
+php artisan test --filter=SyncEndpointTest
+php artisan test --filter=CatalogListTest
+```
+
+## Docker (Opcional)
+
+```dockerfile
+# Dockerfile
+FROM php:8.2-fpm
+
+# Instalar dependências...
+COPY . /var/www
+WORKDIR /var/www
+
+RUN composer install --no-dev --optimize-autoloader
+```
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: api_fake_store
+```
+
+## Decisões de Modelagem
+
+### 1. Separação de IDs
+
+- **ID interno** (`id`): Auto-increment para referências internas
+- **ID externo** (`external_id`): ID da FakeStore API para sincronização
+
+### 2. Relacionamentos
+
+- **Category → Products**: One-to-Many
+- **Cascade Delete**: Produtos são removidos se categoria for deletada
+
+### 3. SoftDeletes
+
+- Mantém histórico para auditoria
+- Activity Log registra todas as alterações
+- Queries filtram automaticamente registros deletados
+
+### 4. Timestamps Customizados
+
+```php
+$table->timestamp('created_at')->useCurrent()->comment('The created_at timestamp registered');
+$table->timestamp('updated_at')->useCurrentOnUpdate()->comment('The updated_at timestamp registered')->nullable()->default(null);
+$table->softDeletes();
+```
+
+## Monitoramento
+
+### Logs de Integração
+
+- Tempo de resposta por requisição
+- Rate limiting por cliente
+- Erros de sincronização
+- Performance de queries
+
+### Activity Log
+
+- Todas as alterações nos models
+- Rastreamento de quem/quando/o que mudou
+- Útil para auditoria e debugging
+
+## Próximos Passos
+
+1. **Cache**: Implementar cache Redis para listagens
+2. **Queue**: Mover sincronização para background jobs
+3. **Rate Limiting**: Implementar limitador por X-Client-Id
+4. **Webhooks**: Receber notificações de mudanças
+5. **Métricas**: Prometheus/Grafana para monitoramento
+
+## Contribuição
+
+1. Fork o projeto
+2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
+3. Commit: `git commit -m 'feat: adiciona nova funcionalidade'`
+4. Push: `git push origin feature/nova-funcionalidade`
+5. Abra um Pull Request
+
+## Licença
+
+MIT License - veja [LICENSE](LICENSE) para detalhes.
