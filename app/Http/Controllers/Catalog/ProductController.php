@@ -33,6 +33,16 @@ class ProductController extends Controller
         ]);
     }
 
+    public function activity(int $id): JsonResponse
+    {
+        $activities = $this->productService->getProductActivity($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $activities
+        ]);
+    }
+
     public function deleteAll(): JsonResponse
     {
         $deletedCount = $this->productService->deleteAllProducts();

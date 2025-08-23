@@ -18,6 +18,7 @@ Route::middleware([IntegrationClientMiddleware::class])->group(function () {
         Route::group(['prefix' => '/products'], function(){
             Route::get('/', [ProductController::class, 'index']);
             Route::get('/{id}', [ProductController::class, 'show']);
+            Route::get('/{id}/activity', [ProductController::class, 'activity']);
             Route::delete('/all', [ProductController::class, 'deleteAll']);
         });
     });

@@ -23,16 +23,15 @@ class DeltaSyncStrategy implements SyncStrategyInterface
         $result = new SyncResultDTO();
 
         try {
-            $lastSync = Carbon::now()->subDay();
-            $products = $this->client->getAllProducts();
+            $products = $this->client->getProducts(5);
+            $lastSync = Carbon::now()->subHour();
 
             foreach ($products as $productData) {
                 try {
                     $productDTO = ProductDTO::fromArray($productData);
                     $existingProduct = $this->productRepository->getByExternalId($productDTO->id);
 
-                    // Simula verificação de atualização
-                    if ($existingProduct && $existingProduct->updated_at->lt($lastSync)) {
+                    if ($existingProduct && $existingProduct->updated_at->gt($lastSync)) {
                         $result->addSkipped();
                         continue;
                     }

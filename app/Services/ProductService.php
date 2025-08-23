@@ -15,7 +15,7 @@ class ProductService extends AbstractService
     protected function getAllowedFilters(): array
     {
         return array_merge(parent::getAllowedFilters(), [
-            'category', 'min_price', 'max_price', 'q', 'sort'
+            'category', 'min_price', 'max_price', 'q', 'sort', 'order'
         ]);
     }
 
@@ -69,13 +69,44 @@ class ProductService extends AbstractService
         ];
     }
 
+    public function getProductActivity(int $id)
+    {
+        $product = $this->repository->getById($id);
+
+        if (empty($product)) {
+            $this->findOrFailBusiness($id, 'Product not found');
+        }
+
+        return $product->activities()
+            ->with('causer')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'description' => $activity->description,
+                    'event' => $activity->event,
+                    'properties' => $activity->properties,
+                    'created_at' => $activity->created_at,
+                    'causer' => $activity->causer ? [
+                        'id' => $activity->causer->id,
+                        'name' => $activity->causer->name ?? 'Sistema'
+                    ] : ['name' => 'Sistema']
+                ];
+            });
+    }
+
     public function deleteAllProducts(): int
     {
         return $this->withTransaction(function () {
-            $model = $this->repository->getModel();
-            $count = $model::withTrashed()->count();
-            $model::withTrashed()->forceDelete();
-            return $count;
+            $productModel = $this->repository->getModel();
+            $productCount = $productModel::withTrashed()->count();
+
+            $productModel::withTrashed()->forceDelete();
+
+            DB::table('categories')->delete();
+
+            return $productCount;
         });
     }
 }
