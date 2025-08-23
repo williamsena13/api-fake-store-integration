@@ -1,19 +1,25 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Integration\FakeStoreSyncController;
+use App\Http\Controllers\Catalog\ProductController;
+use App\Http\Controllers\Catalog\CategoryController;
+use App\Http\Controllers\Catalog\StatsController;
+use App\Http\Middleware\IntegrationClientMiddleware;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+Route::middleware([IntegrationClientMiddleware::class])->group(function () {
+    // Integração FakeStore
+    Route::post('/integracoes/fakestore/sync', [FakeStoreSyncController::class, 'sync']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    Route::group(['prefix' => '/catalogo'], function(){
+
+        Route::get('/stats', [StatsController::class, 'index']);
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::group(['prefix' => '/products'], function(){
+            Route::get('/', [ProductController::class, 'index']);
+            Route::get('/{id}', [ProductController::class, 'show']);
+            Route::delete('/all', [ProductController::class, 'deleteAll']);
+        });
+    });
+
 });
