@@ -63,6 +63,7 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
+            'tap' => [App\Logging\JsonFormatter::class],
         ],
 
         'daily' => [
@@ -103,6 +104,20 @@ return [
                 'stream' => 'php://stderr',
             ],
             'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        'integration' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/integration.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'replace_placeholders' => true,
+            'tap' => [App\Logging\JsonFormatter::class],
+        ],
+
+        'integration_slack' => [
+            'driver' => 'stack',
+            'channels' => ['integration', 'slack'],
+            'ignore_exceptions' => false,
         ],
 
         'syslog' => [
