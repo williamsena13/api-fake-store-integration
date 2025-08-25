@@ -33,7 +33,8 @@ abstract class BaseModel extends Model
         return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty()
-            ->logExcept(['created_at', 'updated_at'])
-            ->dontSubmitEmptyLogs();
+            ->logExcept(['created_at', 'updated_at', 'deleted_at'])
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Product {$eventName}");
     }
 }

@@ -27,7 +27,8 @@ class CategoryRepository extends AbstractRepository
 
     public function getAllWithProductsCount()
     {
-        return $this->model->withCount('products')
+        return $this->model->newQuery()
+            ->withCount('products')
             ->orderBy('name')
             ->get()
             ->map(function ($category) {

@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 class BusinessException extends Exception
 {
     protected int $status;
-    protected string $code;
+    protected string $businessCode;
     protected array $context;
 
     public function __construct(
@@ -20,7 +20,7 @@ class BusinessException extends Exception
     ) {
         parent::__construct($message);
         $this->status = $status;
-        $this->code = $code;
+        $this->businessCode = $code;
         $this->context = $context;
     }
 
@@ -28,7 +28,7 @@ class BusinessException extends Exception
     {
         return response()->json([
             'error' => [
-                'code' => $this->code,
+                'code' => $this->businessCode,
                 'message' => $this->getMessage(),
                 'status' => $this->status,
                 'context' => $this->context,
@@ -42,9 +42,9 @@ class BusinessException extends Exception
         return $this->status;
     }
 
-    public function getCode(): string
+    public function getBusinessCode(): string
     {
-        return $this->code;
+        return $this->businessCode;
     }
 
     public function getContext(): array

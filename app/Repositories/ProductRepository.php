@@ -31,12 +31,45 @@ class ProductRepository extends AbstractRepository
             $query->where('title', 'like', '%' . $params['q'] . '%');
         }
 
-        if (isset($params['sort']) && $params['sort'] === 'price') {
+        return $query;
+    }
+
+    public function index($params)
+    {
+        $filter = $this->filter($params);
+
+        if (isset($params['sort'])) {
             $order = $params['order'] ?? 'asc';
-            $query->orderBy('price', $order);
+
+            switch ($params['sort']) {
+                case 'title':
+                    $filter->orderBy('title', $order);
+                    break;
+                case 'price':
+                    $filter->orderBy('price', $order);
+                    break;
+                case 'category.name':
+                    $filter->join('categories', 'products.category_id', '=', 'categories.id')
+                           ->orderBy('categories.name', $order)
+                           ->select('products.*');
+                    break;
+                case 'created_at':
+                    $filter->orderBy('created_at', $order);
+                    break;
+                case 'updated_at':
+                    $filter->orderBy('updated_at', $order);
+                    break;
+                default:
+                    $filter->orderBy('id', 'desc');
+            }
+        } else {
+            $filter->orderBy('id', 'desc');
         }
 
-        return $query;
+        $page = $params['page'] ?? 1;
+        $per_page = $params['per_page'] ?? 15;
+
+        return $filter->paginate($per_page, ['*'], 'page', $page);
     }
 
     public function getWithCategory(int $id): ?Product
